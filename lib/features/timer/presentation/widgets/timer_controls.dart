@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 
 import '../bloc/timer_state.dart';
@@ -24,26 +23,46 @@ class TimerControls extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        FilledButton.icon(
-          onPressed: paused ? onResume : onPause,
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF2FB7FF),
-            foregroundColor: const Color(0xFF0A1A27),
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+        SizedBox(
+          height: 40,
+          child: FilledButton.icon(
+            onPressed: paused ? onResume : onPause,
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF53B5EA),
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            icon: Icon(paused ? Icons.play_arrow : Icons.pause, size: 20),
+            label: Text(paused ? 'Resume session' : 'Pause session'),
           ),
-          icon: Icon(paused ? Icons.play_arrow : Icons.pause),
-          label: Text(paused ? 'Resume' : 'Pause'),
         ),
         const SizedBox(width: 12),
-        OutlinedButton.icon(
-          onPressed: onStop,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFE0E3EC),
-            side: const BorderSide(color: Color(0xFF585C67)),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        SizedBox(
+          height: 40,
+          child: OutlinedButton.icon(
+            onPressed: onStop,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFFD0D0D0),
+              side: const BorderSide(color: Color(0xFF4F4F4F)),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              textStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+            ),
+            icon: const Icon(Icons.stop, size: 20),
+            label: const Text('Stop session'),
           ),
-          icon: const Icon(Icons.stop),
-          label: const Text('Stop'),
         ),
       ],
     );

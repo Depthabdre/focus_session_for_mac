@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 
 class SettingsToggleSwitch extends StatelessWidget {
@@ -45,7 +44,7 @@ class SettingsToggleSwitch extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF2FB7FF),
+            activeThumbColor: const Color(0xFF53B5EA),
           ),
         ],
       ),

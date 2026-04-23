@@ -35,10 +35,11 @@ class _FocusHomePageState extends State<FocusHomePage> {
         }
 
         return Scaffold(
+          backgroundColor: const Color(0xFF202020),
           body: Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: <Color>[Color(0xFF1B1C20), Color(0xFF212229)],
+                colors: <Color>[Color(0xFF202020), Color(0xFF2A2B2D)],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -47,7 +48,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 540),
+                  constraints: const BoxConstraints(maxWidth: 460),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -66,11 +67,11 @@ class _FocusHomePageState extends State<FocusHomePage> {
                                     AppRouter.settingsRoute,
                                   );
                                 },
-                                icon: const Icon(Icons.settings_outlined),
-                                color: const Color(0xFFCCD2DD),
+                                icon: const Icon(Icons.more_horiz),
+                                color: const Color(0xFFE2E2E2),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 16),
                             Expanded(
                               child: timerState.status == TimerStatus.running ||
                                       timerState.status == TimerStatus.paused
@@ -93,11 +94,15 @@ class _FocusHomePageState extends State<FocusHomePage> {
                                               (_selectedMinutes + 5).clamp(5, 720);
                                         });
                                       },
-                                      onStartTap: () {
+                                      onStartTap: (bool skipBreaks) {
+                                        final sessionSettings = skipBreaks 
+                                            ? settings.copyWith(breakDurationMinutes: 0)
+                                            : settings;
+
                                         context.read<TimerBloc>().add(
                                               TimerStarted(
                                                 totalTargetMinutes: _selectedMinutes,
-                                                settings: settings,
+                                                settings: sessionSettings,
                                               ),
                                             );
                                       },
@@ -144,7 +149,7 @@ class _FocusHomePageState extends State<FocusHomePage> {
   }
 }
 
-class _NoSessionContent extends StatelessWidget {
+class _NoSessionContent extends StatefulWidget {
   const _NoSessionContent({
     required this.selectedMinutes,
     required this.focusDuration,
@@ -159,15 +164,22 @@ class _NoSessionContent extends StatelessWidget {
   final int breakDuration;
   final VoidCallback onMinusTap;
   final VoidCallback onPlusTap;
-  final VoidCallback onStartTap;
+  final Function(bool skipBreaks) onStartTap;
+
+  @override
+  State<_NoSessionContent> createState() => _NoSessionContentState();
+}
+
+class _NoSessionContentState extends State<_NoSessionContent> {
+  bool _skipBreaks = false;
 
   @override
   Widget build(BuildContext context) {
-    final int blockDuration = focusDuration + breakDuration;
-    final int plannedBreaks = blockDuration > 0 ? selectedMinutes ~/ blockDuration : 0;
+    final int blockDuration = widget.focusDuration + widget.breakDuration;
+    final int plannedBreaks = blockDuration > 0 ? widget.selectedMinutes ~/ blockDuration : 0;
 
     String breakLabel;
-    if (selectedMinutes <= focusDuration || plannedBreaks == 0) {
+    if (_skipBreaks || widget.selectedMinutes <= widget.focusDuration || plannedBreaks == 0) {
       breakLabel = 'You\'ll have no breaks.';
     } else if (plannedBreaks == 1) {
       breakLabel = 'You\'ll have 1 break.';
@@ -177,32 +189,45 @@ class _NoSessionContent extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2B2D32),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF323232),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF3F3F3F), width: 1.2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text(
             'Ready, set, focus!',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
           ),
-          const SizedBox(height: 12),
-          Text(
-            'Achieve your goals and get more done with focus sessions. '
-            'Tell us how much time you have, and we\'ll set up the rest.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Achieve your goals and get more done with focus\nsessions. '
+              'Tell us how much time you have, and we\'ll\nset up the rest.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFFD0D0D0),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+            ),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 38),
           Container(
-            width: 170,
+            width: 160,
             height: 110,
             decoration: BoxDecoration(
-              color: const Color(0xFF383A40),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF404040),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF4F4F4F)),
             ),
             child: Row(
               children: <Widget>[
@@ -211,45 +236,59 @@ class _NoSessionContent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Text(
-                        '$selectedMinutes',
+                        '${widget.selectedMinutes}',
                         style: const TextStyle(
-                          fontSize: 48,
-                          fontWeight: FontWeight.w500,
+                          fontSize: 42,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white,
                           height: 1,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       const Text(
                         'mins',
                         style: TextStyle(
-                          color: Color(0xFFB7BCC8),
+                          color: Color(0xFFA0A0A0),
+                          fontSize: 13,
                         ),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  width: 42,
+                  width: 44,
                   decoration: const BoxDecoration(
-                    color: Color(0xFF32343A),
+                    color: Color(0xFF383838),
                     borderRadius: BorderRadius.only(
-                      topRight: Radius.circular(12),
-                      bottomRight: Radius.circular(12),
+                      topRight: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
                     ),
                   ),
                   child: Column(
                     children: <Widget>[
                       Expanded(
-                        child: IconButton(
-                          onPressed: onPlusTap,
-                          icon: const Icon(Icons.keyboard_arrow_up),
-                          color: const Color(0xFFDEE3EF),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: widget.onPlusTap,
+                            borderRadius: const BorderRadius.only(topRight: Radius.circular(8)),
+                            child: const Center(
+                              child: Icon(Icons.keyboard_arrow_up, color: Color(0xFFE2E2E2), size: 28),
+                            ),
+                          ),
                         ),
                       ),
+                      Container(height: 1, color: const Color(0xFF4F4F4F)),
                       Expanded(
-                        child: IconButton(
-                          onPressed: onMinusTap,
-                          icon: const Icon(Icons.keyboard_arrow_down),
-                          color: const Color(0xFFDEE3EF),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: widget.onMinusTap,
+                            borderRadius: const BorderRadius.only(bottomRight: Radius.circular(8)),
+                            child: const Center(
+                              child: Icon(Icons.keyboard_arrow_down, color: Color(0xFFE2E2E2), size: 28),
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -258,27 +297,67 @@ class _NoSessionContent extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 26),
           Text(
             breakLabel,
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: Checkbox(
+                  value: _skipBreaks,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _skipBreaks = value ?? false;
+                    });
+                  },
+                  fillColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Color(0xFF53B5EA);
+                    }
+                    return Colors.transparent;
+                  }),
+                  checkColor: Colors.black,
+                  side: const BorderSide(color: Color(0xFFA0A0A0), width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Skip breaks',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFFA0A0A0),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
           SizedBox(
-            height: 44,
+            height: 40,
             child: FilledButton.icon(
-              onPressed: onStartTap,
-              icon: const Icon(Icons.play_arrow),
+              onPressed: () => widget.onStartTap(_skipBreaks),
+              icon: const Icon(Icons.play_arrow, size: 20, color: Colors.black),
               label: const Text('Start focus session'),
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF2FB7FF),
-                foregroundColor: const Color(0xFF0A1A27),
+                backgroundColor: const Color(0xFF53B5EA),
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
                 textStyle: const TextStyle(
-                  fontSize: 17,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
               ),
             ),
@@ -304,34 +383,46 @@ class _ActiveSessionContent extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF2B2D32),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF323232),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF3F3F3F), width: 1.2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text(
             headline,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  fontSize: 22,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: const Color(0xFFD0D0D0),
+                  fontSize: 14,
+                ),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 38),
           CircularProgressTimer(
             remainingSeconds: timerState.remainingSeconds,
             totalSeconds: timerState.currentPhaseTotalSeconds,
             phaseType: timerState.currentPhaseType,
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 32),
           Text(
-            timerState.status == TimerStatus.paused ? 'Paused' : 'Running',
-            style: Theme.of(context).textTheme.bodyLarge,
+            timerState.status == TimerStatus.paused ? 'Paused' : 'Focus session active',
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
           ),
         ],
       ),

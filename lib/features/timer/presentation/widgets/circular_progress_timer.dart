@@ -1,10 +1,10 @@
-import 'package:flutter/widgets.dart';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/time_formatter.dart';
 import '../../domain/entities/session_phase.dart';
 
-class CircularProgressTimer extends StatelessWidget {
+class CircularProgressTimer extends StatefulWidget {
   const CircularProgressTimer({
     super.key,
     required this.remainingSeconds,
@@ -17,50 +17,117 @@ class CircularProgressTimer extends StatelessWidget {
   final SessionPhaseType phaseType;
 
   @override
+  State<CircularProgressTimer> createState() => _CircularProgressTimerState();
+}
+
+class _CircularProgressTimerState extends State<CircularProgressTimer> with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final double progress = totalSeconds == 0
+    // Progress naturally goes from 0.0 to 1.0
+    final double progress = widget.totalSeconds == 0
         ? 0
-        : (1 - (remainingSeconds / totalSeconds)).clamp(0.0, 1.0);
-    final Color activeColor = phaseType == SessionPhaseType.breakTime
-        ? const Color(0xFF7ED39A)
-        : const Color(0xFF2FB7FF);
+        : (1 - (widget.remainingSeconds / widget.totalSeconds)).clamp(0.0, 1.0);
+        
+    final Color activeColor = widget.phaseType == SessionPhaseType.breakTime
+        ? const Color(0xFF7ED39A) // Soft green for breaks
+        : const Color(0xFF53B5EA); // Modern Windows 11 focus blue
 
     return SizedBox(
-      width: 260,
-      height: 260,
+      width: 280,
+      height: 280,
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
-          CircularProgressIndicator(
-            value: 1,
-            strokeWidth: 14,
-            color: const Color(0xFF3A3C43),
-            backgroundColor: Colors.transparent,
+          // Deep glowing background ring for the modern cool look
+          AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return Container(
+                width: 250,
+                height: 250,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: activeColor.withValues(alpha: 0.08 + (_pulseController.value * 0.07)),
+                      blurRadius: 35,
+                      spreadRadius: 10,
+                    ),
+                  ],
+                ),
+              );
+            }
           ),
-          CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 14,
-            color: activeColor,
-            backgroundColor: Colors.transparent,
+          // Segmented Progress Circle
+          CustomPaint(
+            size: const Size(280, 280),
+            painter: SegmentedCircularProgressPainter(
+              progress: progress,
+              activeColor: activeColor,
+              inactiveColor: const Color(0xFF33353A),
+              segmentCount: 60, // 60 ticks around the clock!
+              strokeWidth: 6,
+            ),
           ),
+          // Inner Timer Text Layout
           Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(
-                formatSecondsToMmSs(remainingSeconds),
+                formatSecondsToMmSs(widget.remainingSeconds),
                 style: const TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFF2F4F8),
+                  fontSize: 56,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFFF9FAFB),
+                  letterSpacing: -0.5,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
-              Text(
-                phaseType == SessionPhaseType.breakTime ? 'BREAK' : 'FOCUS',
-                style: const TextStyle(
-                  letterSpacing: 1.2,
-                  fontSize: 13,
-                  color: Color(0xFFB7BCC8),
-                  fontWeight: FontWeight.w600,
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: activeColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      widget.phaseType == SessionPhaseType.breakTime 
+                          ? Icons.coffee_outlined 
+                          : Icons.center_focus_strong_outlined,
+                      size: 14,
+                      color: activeColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.phaseType == SessionPhaseType.breakTime ? 'BREAK Phase' : 'FOCUS Session',
+                      style: TextStyle(
+                        letterSpacing: 1.0,
+                        fontSize: 12,
+                        color: activeColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -68,5 +135,71 @@ class CircularProgressTimer extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class SegmentedCircularProgressPainter extends CustomPainter {
+  const SegmentedCircularProgressPainter({
+    required this.progress,
+    required this.activeColor,
+    required this.inactiveColor,
+    required this.segmentCount,
+    required this.strokeWidth,
+  });
+
+  final double progress;
+  final Color activeColor;
+  final Color inactiveColor;
+  final int segmentCount;
+  final double strokeWidth;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double radius = math.min(size.width, size.height) / 2;
+    final Offset center = Offset(size.width / 2, size.height / 2);
+    
+    final double sweepAngle = (math.pi * 2) / segmentCount;
+    // The gap between segments
+    final double gapAngle = sweepAngle * 0.35; 
+    final double actualSweep = sweepAngle - gapAngle;
+
+    final Paint inactivePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..color = inactiveColor;
+
+    final Paint activePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth + 2 // Make active stroke slightly thicker
+      ..strokeCap = StrokeCap.round
+      ..color = activeColor;
+
+    // Calculate how many segments should be lit up
+    final int activeSegments = (progress * segmentCount).round();
+
+    for (int i = 0; i < segmentCount; i++) {
+      // Start from top (-pi / 2), and go clockwise. 
+      final double startAngle = -math.pi / 2 + (i * sweepAngle);
+      
+      final Paint currentPaint = i < activeSegments ? activePaint : inactivePaint;
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius - strokeWidth / 2),
+        startAngle,
+        actualSweep,
+        false,
+        currentPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(SegmentedCircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.activeColor != activeColor ||
+        oldDelegate.inactiveColor != inactiveColor ||
+        oldDelegate.segmentCount != segmentCount ||
+        oldDelegate.strokeWidth != strokeWidth;
   }
 }

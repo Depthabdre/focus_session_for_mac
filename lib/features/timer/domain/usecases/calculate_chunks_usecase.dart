@@ -33,12 +33,14 @@ class CalculateChunksUseCase {
           durationMinutes: focusDuration,
         ),
       );
-      phases.add(
-        SessionPhase(
-          type: SessionPhaseType.breakTime,
-          durationMinutes: breakDuration,
-        ),
-      );
+      if (breakDuration > 0) {
+        phases.add(
+          SessionPhase(
+            type: SessionPhaseType.breakTime,
+            durationMinutes: breakDuration,
+          ),
+        );
+      }
     }
 
     if (remainder > 0) {

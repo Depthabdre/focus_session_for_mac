@@ -161,6 +161,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
         title: 'Focus session complete',
         body: 'Great work. You have reached your target time.',
         enabled: _activeSettings.notificationsEnabled,
+        onUserInteraction: () => _audioService.stopSound(),
       );
       return;
     }
@@ -182,6 +183,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           ? 'Take a short break before your next focus block.'
           : 'Break is over. Ready to focus?',
       enabled: _activeSettings.notificationsEnabled,
+      onUserInteraction: () => _audioService.stopSound(),
     );
 
     emit(

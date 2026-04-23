@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:local_notifier/local_notifier.dart';
 
 class NotificationService {
@@ -12,6 +13,7 @@ class NotificationService {
     required String title,
     required String body,
     bool enabled = true,
+    VoidCallback? onUserInteraction,
   }) async {
     if (!enabled) {
       return;
@@ -20,8 +22,24 @@ class NotificationService {
     final LocalNotification notification = LocalNotification(
       title: title,
       body: body,
-      silent: false,
+      silent: true, // Audio service handles the continuous loop
+      actions: [
+        LocalNotificationAction(text: 'Stop alarm'),
+      ],
     );
+
+    notification.onClick = () {
+      onUserInteraction?.call();
+    };
+
+    notification.onClickAction = (int actionIndex) {
+      onUserInteraction?.call();
+    };
+
+    notification.onClose = (LocalNotificationCloseReason reason) {
+      onUserInteraction?.call();
+    };
+
     await notification.show();
   }
 }

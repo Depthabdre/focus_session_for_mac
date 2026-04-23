@@ -19,21 +19,29 @@ class CalculateChunksUseCase {
 
     final int focusDuration = settings.focusDurationMinutes;
     final int breakDuration = settings.breakDurationMinutes;
-    final int blockDuration = focusDuration + breakDuration;
-
+    
     final List<SessionPhase> phases = <SessionPhase>[];
 
-    final int fullBlocks = totalTargetMinutes ~/ blockDuration;
-    final int remainder = totalTargetMinutes % blockDuration;
-
-    for (int i = 0; i < fullBlocks; i++) {
+    if (breakDuration == 0) {
+      // If there are no breaks, the entire duration is just one solid focus phase
       phases.add(
         SessionPhase(
           type: SessionPhaseType.focus,
-          durationMinutes: focusDuration,
+          durationMinutes: totalTargetMinutes,
         ),
       );
-      if (breakDuration > 0) {
+    } else {
+      final int blockDuration = focusDuration + breakDuration;
+      final int fullBlocks = totalTargetMinutes ~/ blockDuration;
+      final int remainder = totalTargetMinutes % blockDuration;
+
+      for (int i = 0; i < fullBlocks; i++) {
+        phases.add(
+          SessionPhase(
+            type: SessionPhaseType.focus,
+            durationMinutes: focusDuration,
+          ),
+        );
         phases.add(
           SessionPhase(
             type: SessionPhaseType.breakTime,
@@ -41,15 +49,15 @@ class CalculateChunksUseCase {
           ),
         );
       }
-    }
 
-    if (remainder > 0) {
-      phases.add(
-        SessionPhase(
-          type: SessionPhaseType.focus,
-          durationMinutes: remainder,
-        ),
-      );
+      if (remainder > 0) {
+        phases.add(
+          SessionPhase(
+            type: SessionPhaseType.focus,
+            durationMinutes: remainder,
+          ),
+        );
+      }
     }
 
     if (phases.isEmpty) {

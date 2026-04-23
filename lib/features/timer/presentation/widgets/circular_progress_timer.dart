@@ -10,11 +10,13 @@ class CircularProgressTimer extends StatefulWidget {
     required this.remainingSeconds,
     required this.totalSeconds,
     required this.phaseType,
+    this.size = 280.0,
   });
 
   final int remainingSeconds;
   final int totalSeconds;
   final SessionPhaseType phaseType;
+  final double size;
 
   @override
   State<CircularProgressTimer> createState() => _CircularProgressTimerState();
@@ -50,8 +52,8 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
         : const Color(0xFF53B5EA); // Modern Windows 11 focus blue
 
     return SizedBox(
-      width: 280,
-      height: 280,
+      width: widget.size,
+      height: widget.size,
       child: Stack(
         alignment: Alignment.center,
         children: <Widget>[
@@ -60,8 +62,8 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
             animation: _pulseController,
             builder: (context, child) {
               return Container(
-                width: 250,
-                height: 250,
+                width: widget.size * 0.9,
+                height: widget.size * 0.9,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   boxShadow: [
@@ -77,13 +79,13 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
           ),
           // Segmented Progress Circle
           CustomPaint(
-            size: const Size(280, 280),
+            size: Size(widget.size, widget.size),
             painter: SegmentedCircularProgressPainter(
               progress: progress,
               activeColor: activeColor,
               inactiveColor: const Color(0xFF33353A),
               segmentCount: 60, // 60 ticks around the clock!
-              strokeWidth: 6,
+              strokeWidth: widget.size * 0.021,
             ),
           ),
           // Inner Timer Text Layout
@@ -92,12 +94,12 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
             children: <Widget>[
               Text(
                 formatSecondsToMmSs(widget.remainingSeconds),
-                style: const TextStyle(
-                  fontSize: 56,
+                style: TextStyle(
+                  fontSize: widget.size * 0.2,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFFF9FAFB),
+                  color: const Color(0xFFF9FAFB),
                   letterSpacing: -0.5,
-                  fontFeatures: [FontFeature.tabularFigures()],
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
               const SizedBox(height: 4),
@@ -114,7 +116,7 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
                       widget.phaseType == SessionPhaseType.breakTime 
                           ? Icons.coffee_outlined 
                           : Icons.center_focus_strong_outlined,
-                      size: 14,
+                      size: widget.size * 0.05,
                       color: activeColor,
                     ),
                     const SizedBox(width: 4),
@@ -122,7 +124,7 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
                       widget.phaseType == SessionPhaseType.breakTime ? 'BREAK Phase' : 'FOCUS Session',
                       style: TextStyle(
                         letterSpacing: 1.0,
-                        fontSize: 12,
+                        fontSize: widget.size * 0.042,
                         color: activeColor,
                         fontWeight: FontWeight.w600,
                       ),

@@ -73,61 +73,51 @@ class _FocusHomePageState extends State<FocusHomePage> {
                             ),
                             const SizedBox(height: 16),
                             Expanded(
-                              child: timerState.status == TimerStatus.running ||
-                                      timerState.status == TimerStatus.paused
-                                  ? _ActiveSessionContent(
-                                      timerState: timerState,
-                                    )
-                                  : _NoSessionContent(
-                                      selectedMinutes: _selectedMinutes,
-                                      focusDuration: settings.focusDurationMinutes,
-                                      breakDuration: settings.breakDurationMinutes,
-                                      onMinusTap: () {
-                                        setState(() {
-                                          _selectedMinutes =
-                                              (_selectedMinutes - 5).clamp(5, 720);
-                                        });
-                                      },
-                                      onPlusTap: () {
-                                        setState(() {
-                                          _selectedMinutes =
-                                              (_selectedMinutes + 5).clamp(5, 720);
-                                        });
-                                      },
-                                      onStartTap: (bool skipBreaks) {
-                                        final sessionSettings = skipBreaks 
-                                            ? settings.copyWith(breakDurationMinutes: 0)
-                                            : settings;
+                              child: SingleChildScrollView(
+                                child: timerState.status == TimerStatus.running ||
+                                        timerState.status == TimerStatus.paused
+                                    ? _ActiveSessionContent(
+                                        timerState: timerState,
+                                      )
+                                    : _NoSessionContent(
+                                        selectedMinutes: _selectedMinutes,
+                                        focusDuration: settings.focusDurationMinutes,
+                                        breakDuration: settings.breakDurationMinutes,
+                                        onMinutesChanged: (int newMinutes) {
+                                          setState(() {
+                                            _selectedMinutes = newMinutes.clamp(5, 720);
+                                          });
+                                        },
+                                        onMinusTap: () {
+                                          setState(() {
+                                            _selectedMinutes =
+                                                (_selectedMinutes - 5).clamp(5, 720);
+                                          });
+                                        },
+                                        onPlusTap: () {
+                                          setState(() {
+                                            _selectedMinutes =
+                                                (_selectedMinutes + 5).clamp(5, 720);
+                                          });
+                                        },
+                                        onStartTap: (bool skipBreaks) {
+                                          final sessionSettings = skipBreaks 
+                                              ? settings.copyWith(breakDurationMinutes: 0)
+                                              : settings;
 
-                                        context.read<TimerBloc>().add(
-                                              TimerStarted(
-                                                totalTargetMinutes: _selectedMinutes,
-                                                settings: sessionSettings,
-                                              ),
-                                            );
-                                      },
-                                    ),
-                            ),
-                            if (timerState.status == TimerStatus.running ||
-                                timerState.status == TimerStatus.paused)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 32),
-                                child: TimerControls(
-                                  status: timerState.status,
-                                  onPause: () => context.read<TimerBloc>().add(
-                                        const TimerPaused(),
+                                          context.read<TimerBloc>().add(
+                                                TimerStarted(
+                                                  totalTargetMinutes: _selectedMinutes,
+                                                  settings: sessionSettings,
+                                                ),
+                                              );
+                                        },
                                       ),
-                                  onResume: () => context.read<TimerBloc>().add(
-                                        const TimerResumed(),
-                                      ),
-                                  onStop: () => context.read<TimerBloc>().add(
-                                        const TimerStopped(),
-                                      ),
-                                ),
                               ),
+                            ),
                             if (timerState.status == TimerStatus.completed)
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 20),
+                                padding: const EdgeInsets.only(top: 20, bottom: 20),
                                 child: Text(
                                   'Completed. Great focus streak.',
                                   textAlign: TextAlign.center,
@@ -154,6 +144,7 @@ class _NoSessionContent extends StatefulWidget {
     required this.selectedMinutes,
     required this.focusDuration,
     required this.breakDuration,
+    required this.onMinutesChanged,
     required this.onMinusTap,
     required this.onPlusTap,
     required this.onStartTap,
@@ -162,6 +153,7 @@ class _NoSessionContent extends StatefulWidget {
   final int selectedMinutes;
   final int focusDuration;
   final int breakDuration;
+  final ValueChanged<int> onMinutesChanged;
   final VoidCallback onMinusTap;
   final VoidCallback onPlusTap;
   final Function(bool skipBreaks) onStartTap;
@@ -172,6 +164,43 @@ class _NoSessionContent extends StatefulWidget {
 
 class _NoSessionContentState extends State<_NoSessionContent> {
   bool _skipBreaks = false;
+  late TextEditingController _minutesController;
+  final FocusNode _minutesFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _minutesController = TextEditingController(text: widget.selectedMinutes.toString());
+    _minutesFocusNode.addListener(() {
+      if (!_minutesFocusNode.hasFocus) {
+        _submitMinutes();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant _NoSessionContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedMinutes != widget.selectedMinutes && !_minutesFocusNode.hasFocus) {
+      _minutesController.text = widget.selectedMinutes.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _minutesController.dispose();
+    _minutesFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _submitMinutes() {
+    final int? parsed = int.tryParse(_minutesController.text);
+    if (parsed != null && parsed > 0) {
+      widget.onMinutesChanged(parsed);
+    } else {
+      _minutesController.text = widget.selectedMinutes.toString();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -235,13 +264,24 @@ class _NoSessionContentState extends State<_NoSessionContent> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Text(
-                        '${widget.selectedMinutes}',
-                        style: const TextStyle(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white,
-                          height: 1,
+                      IntrinsicWidth(
+                        child: TextField(
+                          controller: _minutesController,
+                          focusNode: _minutesFocusNode,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          onSubmitted: (_) => _submitMinutes(),
+                          style: const TextStyle(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white,
+                            height: 1,
+                          ),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -375,11 +415,30 @@ class _ActiveSessionContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBreak = timerState.currentPhaseType == SessionPhaseType.breakTime;
-    final String headline = isBreak ? 'Break time' : 'Stay focused';
-    final String subtitle = isBreak
-        ? 'Step away for a short recharge.'
-        : 'Keep momentum. You are in a focus phase.';
+    final List<SessionPhase> phases = timerState.phases;
+    final int currentIndex = timerState.currentPhaseIndex;
+    final SessionPhaseType currentPhaseType = timerState.currentPhaseType;
+
+    int focusCount = 0;
+    int breakCount = 0;
+    int currentFocusIndex = 0;
+    int currentBreakIndex = 0;
+
+    for (int i = 0; i < phases.length; i++) {
+      if (phases[i].type == SessionPhaseType.focus) {
+        focusCount++;
+        if (i <= currentIndex) currentFocusIndex = focusCount;
+      } else {
+        breakCount++;
+        if (i <= currentIndex) currentBreakIndex = breakCount;
+      }
+    }
+
+    final bool isBreak = currentPhaseType == SessionPhaseType.breakTime;
+    
+    final String headline = isBreak 
+        ? (breakCount > 1 ? 'Break ($currentBreakIndex of $breakCount)' : 'Break period')
+        : (focusCount > 1 ? 'Focus period ($currentFocusIndex of $focusCount)' : 'Focus period');
 
     return Container(
       decoration: BoxDecoration(
@@ -387,41 +446,60 @@ class _ActiveSessionContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF3F3F3F), width: 1.2),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            headline,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  fontSize: 22,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 12,
+            left: 14,
+            child: Text(
+              headline.toUpperCase(),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF8A8A8A),
+                fontSize: 10.5,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 24, right: 24, top: 48, bottom: 24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final double size = (constraints.maxWidth * 0.7).clamp(200.0, 260.0);
+                    return CircularProgressTimer(
+                      remainingSeconds: timerState.remainingSeconds,
+                      totalSeconds: timerState.currentPhaseTotalSeconds,
+                      phaseType: timerState.currentPhaseType,
+                      size: size,
+                    );
+                  }
                 ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFFD0D0D0),
-                  fontSize: 14,
+                const SizedBox(height: 24),
+                Text(
+                  timerState.status == TimerStatus.paused ? 'Paused' : 'Focus session active',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
                 ),
-          ),
-          const SizedBox(height: 38),
-          CircularProgressTimer(
-            remainingSeconds: timerState.remainingSeconds,
-            totalSeconds: timerState.currentPhaseTotalSeconds,
-            phaseType: timerState.currentPhaseType,
-          ),
-          const SizedBox(height: 32),
-          Text(
-            timerState.status == TimerStatus.paused ? 'Paused' : 'Focus session active',
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
+                const SizedBox(height: 32),
+                TimerControls(
+                  status: timerState.status,
+                  onPause: () => context.read<TimerBloc>().add(
+                        const TimerPaused(),
+                      ),
+                  onResume: () => context.read<TimerBloc>().add(
+                        const TimerResumed(),
+                      ),
+                  onStop: () => context.read<TimerBloc>().add(
+                        const TimerStopped(),
+                      ),
+                ),
+              ],
             ),
           ),
         ],

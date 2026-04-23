@@ -1,10 +1,54 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 class SettingsToggleSwitch extends StatelessWidget {
-  const SettingsToggleSwitch({super.key});
+  const SettingsToggleSwitch({
+    super.key,
+    required this.label,
+    required this.description,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String description;
+  final bool value;
+  final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox.shrink();
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF33353C),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeColor: const Color(0xFF2FB7FF),
+          ),
+        ],
+      ),
+    );
   }
 }

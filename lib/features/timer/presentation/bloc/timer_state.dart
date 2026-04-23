@@ -49,6 +49,7 @@ class TimerState extends Equatable {
     int? remainingSeconds,
     int? currentPhaseTotalSeconds,
     DateTime? targetEndTime,
+    bool clearTargetEndTime = false,
     String? message,
   }) {
     return TimerState(
@@ -58,7 +59,8 @@ class TimerState extends Equatable {
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       currentPhaseTotalSeconds:
           currentPhaseTotalSeconds ?? this.currentPhaseTotalSeconds,
-      targetEndTime: targetEndTime,
+      targetEndTime:
+          clearTargetEndTime ? null : (targetEndTime ?? this.targetEndTime),
       message: message,
     );
   }

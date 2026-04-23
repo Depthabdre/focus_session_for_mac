@@ -85,7 +85,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       state.copyWith(
         status: TimerStatus.paused,
         remainingSeconds: remaining,
-        targetEndTime: null,
+        clearTargetEndTime: true,
       ),
     );
   }
@@ -152,7 +152,7 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
           status: TimerStatus.completed,
           remainingSeconds: 0,
           currentPhaseTotalSeconds: 0,
-          targetEndTime: null,
+          clearTargetEndTime: true,
         ),
       );
 

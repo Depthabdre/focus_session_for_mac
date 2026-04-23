@@ -11,7 +11,7 @@ class AudioService {
     }
 
     try {
-      await _player.play(AssetSource('audio/ding.mp3'));
+      await _player.play(AssetSource('audio/ding.wav'));
     } catch (_) {
       // Keep timer flow resilient if audio asset is missing.
     }

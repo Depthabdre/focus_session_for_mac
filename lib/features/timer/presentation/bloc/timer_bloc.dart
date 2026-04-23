@@ -172,6 +172,18 @@ class TimerBloc extends Bloc<TimerEvent, TimerState> {
       durationSeconds: nextPhase.durationSeconds,
     );
 
+    // Provide interim updates/notifications when moving between phases
+    await _audioService.playTransitionSound(enabled: _activeSettings.soundEnabled);
+    await _notificationService.showPhaseNotification(
+      title: nextPhase.type == SessionPhaseType.breakTime 
+          ? 'Break time' 
+          : 'Focus time',
+      body: nextPhase.type == SessionPhaseType.breakTime
+          ? 'Take a short break before your next focus block.'
+          : 'Break is over. Ready to focus?',
+      enabled: _activeSettings.notificationsEnabled,
+    );
+
     emit(
       state.copyWith(
         status: TimerStatus.running,

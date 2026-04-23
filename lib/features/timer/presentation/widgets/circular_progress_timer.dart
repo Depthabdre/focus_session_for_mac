@@ -92,15 +92,34 @@ class _CircularProgressTimerState extends State<CircularProgressTimer> with Sing
           Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              Text(
-                formatSecondsToMmSs(widget.remainingSeconds),
-                style: TextStyle(
-                  fontSize: widget.size * 0.2,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFF9FAFB),
-                  letterSpacing: -0.5,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    formatSecondsDynamic(widget.remainingSeconds),
+                    style: TextStyle(
+                      fontSize: widget.size * 0.22,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFF9FAFB),
+                      letterSpacing: -0.5,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  if (widget.remainingSeconds >= 600)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4.0),
+                      child: Text(
+                        'm',
+                        style: TextStyle(
+                          fontSize: widget.size * 0.1,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFA0A0A0),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(height: 4),
               Container(

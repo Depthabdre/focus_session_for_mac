@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -473,7 +474,12 @@ class _ActiveSessionContent extends StatelessWidget {
               children: <Widget>[
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final double size = (constraints.maxWidth * 0.7).clamp(200.0, 420.0);
+                    final Size screenSize = MediaQuery.sizeOf(context);
+                    final double size = math.min(
+                      constraints.maxWidth * 0.7, 
+                      screenSize.height * 0.50,
+                    ).clamp(110.0, 520.0);
+
                     return CircularProgressTimer(
                       remainingSeconds: timerState.remainingSeconds,
                       totalSeconds: timerState.currentPhaseTotalSeconds,

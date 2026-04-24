@@ -45,11 +45,14 @@ class _FocusHomePageState extends State<FocusHomePage> {
               ),
             ),
             child: SafeArea(
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  child: Padding(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final double maxWidth = constraints.maxWidth < 600 ? 460 : 700;
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxWidth),
+                      child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 20,
@@ -130,12 +133,14 @@ class _FocusHomePageState extends State<FocusHomePage> {
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        );
-      },
+        ),
+      ),
     );
+  },
+);
   }
 }
 
@@ -468,7 +473,7 @@ class _ActiveSessionContent extends StatelessWidget {
               children: <Widget>[
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final double size = (constraints.maxWidth * 0.7).clamp(200.0, 260.0);
+                    final double size = (constraints.maxWidth * 0.7).clamp(200.0, 420.0);
                     return CircularProgressTimer(
                       remainingSeconds: timerState.remainingSeconds,
                       totalSeconds: timerState.currentPhaseTotalSeconds,

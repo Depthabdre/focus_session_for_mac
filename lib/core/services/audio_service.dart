@@ -16,7 +16,7 @@ class AudioService {
       _stopTimer?.cancel();
       // Set to loop so the alarm continues for 15 seconds
       await _player.setReleaseMode(ReleaseMode.loop);
-      await _player.play(AssetSource('audio/ding.wav'));
+      await _player.play(AssetSource('audio/idoberg-creepy-halloween-bells-loop-408748.mp3'));
       
       // Auto-stop after 15 seconds if not manually stopped
       _stopTimer = Timer(const Duration(seconds: 15), () {

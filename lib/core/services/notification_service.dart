@@ -44,6 +44,17 @@ class NotificationService {
       },
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
+
+    // Explicitly ask for permissions on macOS so the user gets the native system prompt
+    // when they first open the app, without having to dig into System Settings.
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: false,
+        );
   }
 
   Future<void> showPhaseNotification({
